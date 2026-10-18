@@ -1,0 +1,4 @@
+# The simulator (dtsim.py, analytic.py, run_all.py) uses only the Python standard library (Python >= 3.8).
+# Only the plotting script needs these:
+numpy
+matplotlib

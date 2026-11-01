@@ -99,6 +99,10 @@
       "4": "Tree is valid",
       "5": "Tree is valid",
       "6": "Tree is valid"
+    },
+    "proof_of_work_hash_below_target": {
+      "blocks_checked": 76,
+      "blocks_ok": 76
     }
   },
   "sibling_groups": {

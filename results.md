@@ -92,6 +92,7 @@ Each wallet's lane is set with `WALLET_LANE`: two wallets per lane, and never th
 - **Independent checks on the final tree (all passed):**
   - The slot rule `queue_index = 3 * parent_queue_index + align` holds for all 258 blocks.
   - Every `prev_pqp_commitment` equals the `pqp_commitment` of the nearest earlier block in the same lane.
+  - Every block's hash lies below the target its `bits` encode (258 of 258). Receiving nodes in the prototype do not check this yet, so the analysis does (`analysis.json` → `checks.proof_of_work_hash_below_target`).
 - **Node checks:**
   - `/verify_pqp` returned "PQP is valid" on every node.
   - The `/verify_tree` call at the end of the run returned "Tree is invalid" on every node. The cause was a bug in the check, not in the tree.
@@ -231,7 +232,7 @@ The 25-minute run had no fork, so the fork choice never ran. To exercise it, the
 - **No tree was rejected after a request**, and no pending block was added without its parent-queue entry.
 - **At the end:**
   - All six nodes held identical trees of 77 blocks (76 mined plus genesis; lanes 26 / 31 / 19).
-  - The slot rule and lane links hold, and all 76 blocks carry the bits the rule gives (2 retargets).
+  - The slot rule and lane links hold, all 76 blocks carry the bits the rule gives (2 retargets), and every block's hash lies below its target.
   - The live `/verify_tree` and `/verify_pqp` returned valid on all six nodes.
   - 57 transactions were confirmed, all in the lane of their inputs.
 

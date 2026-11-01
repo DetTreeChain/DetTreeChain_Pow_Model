@@ -30,11 +30,11 @@
 
   - Clone:
     ```bash
-    git clone https://github.com/TreeChainTheory/TreeChainTheory---BitcoinModel
+    git clone https://github.com/DetTreeChain/DetTreeChain_Pow_Model
     ```
   - Enter project folder:
     ```bash
-    cd TreeChainTheory---BitcoinModel
+    cd DetTreeChain_Pow_Model
     ```
 
 - **Confirm files exist (quick check)**

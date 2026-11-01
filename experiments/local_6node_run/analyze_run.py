@@ -141,6 +141,12 @@ def adjust_bits(prev_bits, span_ms, expected_ms):
     return target_to_compact(compact_to_target(prev_bits) * actual // expected_ms)
 
 
+# proof of work: every block's hash must lie below the target its bits encode (receiving nodes
+# in the prototype do not check this yet, so the analysis does)
+pow_ok = [int(b["hash"], 16) < compact_to_target(b["bits"]) for b in real]
+out["checks"]["proof_of_work_hash_below_target"] = {"blocks_checked": len(pow_ok), "blocks_ok": sum(pow_ok)}
+
+
 cfg = json.load(open(os.path.join(D, "config_used.json"))) if os.path.exists(os.path.join(D, "config_used.json")) else {}
 cfg_rate_ms = cfg.get("mining_rate_ms")
 cfg_expected_ms = cfg.get("expected_time_ms")

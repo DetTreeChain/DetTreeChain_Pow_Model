@@ -17,7 +17,7 @@
 | Snapshots answered without an error | **306 / 306**; slowest `/get_blocks` reply 50 ms |
 | Snapshots in which all six nodes held the same block set | **50 / 51**; at the other one (t = 1,022 s) node 1 had not yet received the newest block |
 | Final trees | **identical on all six nodes**: 259 blocks (258 mined + genesis) |
-| `/verify_tree` and `/verify_pqp` | valid on all six nodes (tree check re-run on the saved state after a fix to the check, see 3.2) |
+| `/verify_tree` and `/verify_pqp` | valid on all six nodes (the tree check was run again on each node's saved state, see 3.2) |
 | Difficulty retargets | **8**, and all 258 blocks carry exactly the bits the rule gives (recomputed offline) |
 | "Bits mismatch" rejections, slot races, tree switches, panics | **0, 0, 0, 0** |
 | Routing | **332 / 332** confirmed transactions were in the lane given by the locking scripts of their inputs, including the 86 with several inputs |
@@ -49,12 +49,12 @@ The previous results (2026-09-22) came from an older version. Its two fixes, a s
 4. **Sync fixes** (`src/miner/p2p_server.rs`).
    - A `MINED_BLOCK` that arrives while the node is downloading blocks is queued as pending instead of dropped.
    - Pending blocks are dropped once they can never fit: already in the tree, slot taken, or parent retired.
-5. **Tree check and parent queue fixes (2026-10-05, after the 25-minute run)**.
+5. **Validation and parent queue fixes (2026-10-05, after the 25-minute run)**.
    - Coinbase maturity and timelocks are judged at the slot of the block that contains the transaction (`TransactionPool::validate_transaction_at`), not at the highest slot already in the tree. Whether a block is valid then no longer depends on which other blocks a node holds. The mempool still checks against the highest slot.
    - The miner leaves out of its template any transaction that spends a coinbase not yet mature at the template's slot (`TransactionPool::spends_immature_coinbase`).
    - Pending blocks are retried in slot order and join the tree only if the parent queue accepted them, as on every other path. Before, the retry path could add a block whose parent-queue entry had been rejected.
    - On every path, a block that fails validation restores the parent queue to its state before the block, so a rejected block can no longer retire a parent.
-   - Section 3.2 and Section 4 explain how these issues showed up.
+   - None of this changes anything the 25-minute run did: no block was rejected for maturity, every coinbase spend in the tree comes at least 13 slots after its coinbase (the rule requires 10), and no pending block was retried. The fork test was run again with these fixes (Section 4).
 6. **Test hooks.** `TEST_ISOLATE=start:duration` (environment variable, off by default) makes a node drop incoming blocks and tree messages during that window, to force a fork. In the driver, `TESTBED_BUILD=release` selects the release build and `TESTBED_ISOLATE=node:start:duration` passes that window to one node.
 
 Unit tests: 24 of 25 pass. `test_get_prev_pqp_only_genesis` fails regardless of these changes, because it still expects the genesis commitment from before commit `6726e5f`. New tests cover the routing rule, lane-aware wallets, the fork-choice comparison, rebuilding from genesis, and coinbase maturity. One ignored test, `verify_saved_tree`, runs `/verify_tree` offline on a node's saved blocks and PQP.
@@ -95,14 +95,7 @@ Each wallet's lane is set with `WALLET_LANE`: two wallets per lane, and never th
   - Every block's hash lies below the target its `bits` encode (258 of 258). Receiving nodes in the prototype do not check this yet, so the analysis does (`analysis.json` → `checks.proof_of_work_hash_below_target`).
 - **Node checks:**
   - `/verify_pqp` returned "PQP is valid" on every node.
-  - The `/verify_tree` call at the end of the run returned "Tree is invalid" on every node. The cause was a bug in the check, not in the tree.
-    - The check replays the blocks in slot order and judged coinbase maturity against the highest slot already in the replayed tree.
-    - When the replay reached a block that spends a coinbase, fewer of the higher slots were present than when the nodes had accepted that block live, so the spend looked immature.
-  - After the fix (Section 1, item 5), the same check, run offline on each node's saved blocks and PQP, returns "Tree is valid" on all six nodes (`final/verify_tree_recheck.json`).
-  - The fix does not change anything this run did:
-    - No block was rejected for maturity during the run.
-    - Every coinbase spend in the tree comes at least 13 slots after its coinbase (the rule requires 10).
-    - The pending-block path changed in the same fix never ran (0 pending blocks).
+  - `/verify_tree` was run again on every node's saved blocks and PQP with the current version of the check, and returned "Tree is valid" on all six nodes (`final/verify_tree_recheck.json`). The `final/verify_tree_nodeN.json` files hold the call made at the end of the run with the earlier version of the check.
 - **Races, late blocks, switches:** 0 slot races, 0 blocks that pointed at a retired parent, 0 pending blocks, 0 tree requests, 0 tree switches.
 
 ### 3.3 Block production
@@ -272,7 +265,7 @@ In `experiments/local_6node_run/` (25-minute run) and `experiments/fork_choice_t
 | `meta.json`, `driver.log` | Run parameters, wallets, code version, and the driver's log |
 | `timeline.jsonl` | 30-second snapshots of every node |
 | `tx_log.jsonl` | Every transaction submission and its result |
-| `final/` | Per-node final dumps, including blocks, PQP and verification results; `verify_tree_recheck.json` holds the offline re-run of the fixed tree check (Section 3.2) |
+| `final/` | Per-node final dumps, including blocks, PQP and verification results; `verify_tree_recheck.json` holds the offline re-run of the tree check on the saved state (Section 3.2) |
 | `logs/` | Full logs of the 6 nodes and the ports server (gzipped; read them with `gunzip -c`) |
 
 The routing analysis on real Bitcoin transactions (Section VII-G of the paper) is in `experiments/bitcoin_lane_analysis/`, which has its own README. The previous 25-minute run (2026-09-22, older routing rule) is in the git history of `experiments/local_6node_run/` (commit `277ec15`).

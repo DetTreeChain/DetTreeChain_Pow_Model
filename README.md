@@ -1,12 +1,12 @@
-# 🌳 TreeChainTheory – Bitcoin Model  
+# 🌳 DetTreeChain – Bitcoin Model  
 > **BlockChain with Tree-Structured Consensus**
 
-TreeChainTheory – Bitcoin Model extends the **TreeChainTheory** concept into a working prototype based on Bitcoin’s architecture.  
+DetTreeChain – Bitcoin Model extends the **DetTreeChain** concept into a working prototype based on Bitcoin’s architecture.  
 Instead of a linear chain, blocks are organized in a **tree**, allowing **parallel mining**, **multi-leader operation**, and **scalable block production** — all while preserving **Bitcoin’s UTXO**, **PoW**, and **ECDSA** foundations.
 
 
 # 🔐 Note
-This repository is a research and educational reference implementation of the Treechain model applied to a Bitcoin-like system.
+This repository is a research and educational reference implementation of the DetTreeChain model applied to a Bitcoin-like system.
 
 ---
 
@@ -36,10 +36,10 @@ These different **aligned miners** mine their respective aligned blocks under on
 
 ## 🌲 Tree Structure & Parent Queue Pool (PQP)
 
-TreeChainTheory replaces the linear block list with a **branching tree** — each parent may produce multiple children (default: **3**).  
+DetTreeChain replaces the linear block list with a **branching tree** — each parent may produce multiple children (default: **3**).  
 This introduces **parallelism**, **fairness**, and **decentralization** into the mining process.
 
-### 🔍 **Core TreeChain Principles**
+### 🔍 **Core DetTreeChain Principles**
 - **🌳 Branching:**  
   Each parent block produces up to `CHILDREN` (default `3`) children.  
   The system supports **N-ary trees** via config changes.
@@ -73,15 +73,15 @@ This introduces **parallelism**, **fairness**, and **decentralization** into the
 ## ⛏ Mining & Consensus – Bitcoin Model
 
 - **PoW:** Standard nonce iteration until `hash < target`
-- **Mining Rate:** Every `MINING_RATE` ms (default: `100ms`)
+- **Mining Rate:** One block per lane every `MINING_RATE` ms (default: `100000` ms, i.e. 100 s)
 - **Difficulty:** Retargeted every `300` blocks, clamped between ¼× and 4×
-- **Halving:** Subsidy halves every `HALVING_INTERVAL` (default `100` blocks)
+- **Halving:** Subsidy halves every `HALVING_INTERVAL` (default `1000` blocks)
 - **Block Template:**
   - Coinbase transaction (subsidy + fees)
   - Merkle root of transactions
   - PQP entry signed by miner
 - **Queue Index:**  
-  `queue_index = max(parent QI) + align offset`
+  `queue_index = CHILDREN × queue_index(parent) + align`
 - **Parent-Child Completion Constraint**
   A miner must mine its aligned block **before the next parent** gets any children.
 
@@ -136,13 +136,13 @@ This introduces **parallelism**, **fairness**, and **decentralization** into the
 - **UTXO & PQP Integration → Determinism + Auditability**
 
 > ⚙️ **Configurable Scaling:**  
-> Modify `CHILDREN` in `TreeChainTheorey---BitcoinModel/src/config.rs` to experiment with larger tree branching.
+> Modify `CHILDREN` in `src/config.rs` to experiment with larger tree branching.
 
 ---
 
 ## 📈 Summary
 
-TreeChainTheory – Bitcoin Model demonstrates that a **tree-structured blockchain** can achieve:
+DetTreeChain – Bitcoin Model demonstrates that a **tree-structured blockchain** can achieve:
 - 🚀 **Higher throughput** vs. linear chains  
 - 🔒 **Enhanced miner fairness** via PQP  
 - 🌿 **Scalable, parallel consensus** without sharding  
@@ -176,4 +176,4 @@ TreeChainTheory – Bitcoin Model demonstrates that a **tree-structured blockcha
 ---
 
 > “What if a blockchain wasn’t a chain?”  
-> — *TreeChainTheory, 2025*
+> — *DetTreeChain, 2025*
